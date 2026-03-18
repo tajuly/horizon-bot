@@ -2,6 +2,8 @@ import logging
 import random
 import json
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -13,7 +15,7 @@ from telegram.ext import (
 from cards import CARDS
 
 # --- Настройки ---
-BOT_TOKEN = "ВАШ_ТОКЕН_СЮДА"  # Замени на токен от @BotFather
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 HISTORY_FILE = "history.json"
 
 logging.basicConfig(
@@ -21,6 +23,19 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+    def log_message(self, format, *args):
+        pass
+
+def run_health_server():
+    server = HTTPServer(("0.0.0.0", 10000), HealthHandler)
+    server.serve_forever()
 
 
 def load_history() -> dict:
@@ -189,6 +204,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    threading.Thread(target=run_health_server, daemon=True).start()
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))

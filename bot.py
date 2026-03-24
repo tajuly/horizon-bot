@@ -205,16 +205,25 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     threading.Thread(target=run_health_server, daemon=True).start()
-    app = Application.builder().token(BOT_TOKEN).build()
+    
+    while True:
+        try:
+            app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("draw", draw_command))
-    app.add_handler(CommandHandler("history", history_command))
-    app.add_handler(CallbackQueryHandler(button_handler))
+            app.add_handler(CommandHandler("start", start))
+            app.add_handler(CommandHandler("help", help_command))
+            app.add_handler(CommandHandler("draw", draw_command))
+            app.add_handler(CommandHandler("history", history_command))
+            app.add_handler(CallbackQueryHandler(button_handler))
 
-    logger.info("Бот запущен!")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+            logger.info("Бот запущен!")
+            app.run_polling(allowed_updates=Update.ALL_TYPES)
+            
+        except Exception as e:
+            logger.error(f"Ошибка: {e}")
+            logger.info("Перезапуск через 5 секунд...")
+            import time
+            time.sleep(5)
 
 
 if __name__ == "__main__":
